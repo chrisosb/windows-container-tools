@@ -2,7 +2,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 //
-
 #pragma once
 
 typedef LPTSTR(NTAPI* PIPV6ADDRTOSTRING)(
@@ -18,7 +17,8 @@ public:
 
     EtwMonitor(
         _In_ const std::vector<ETWProvider>& Providers,
-        _In_ bool EventFormatMultiLine
+        _In_ bool EventFormatMultiLine,
+        _In_ bool JsonOutput
     );
 
     ~EtwMonitor();
@@ -29,6 +29,7 @@ private:
 
     std::vector<ETWProvider> m_providersConfig;
     bool m_eventFormatMultiLine;
+    bool m_jsonOutput;
     TRACEHANDLE  m_startTraceHandle;
 
     //
@@ -88,7 +89,7 @@ private:
     DWORD FormatMetadata(
         _In_ const PEVENT_RECORD EventRecord,
         _In_ const PTRACE_EVENT_INFO EventInfo,
-        _Inout_ std::wstring& Result
+        _In_ std::unique_ptr<OutputWriter>& OutputWriter
     );
 
     //
@@ -97,7 +98,7 @@ private:
     DWORD FormatData(
         _In_ const PEVENT_RECORD EventRecord,
         _In_ const PTRACE_EVENT_INFO EventInfo,
-        _Inout_ std::wstring& Result
+        _In_ std::unique_ptr<OutputWriter>& OutputWriter
     );
 
     DWORD _FormatData(
@@ -106,7 +107,7 @@ private:
         _In_ USHORT Index,
         _Inout_ PBYTE& UserData,
         _In_ PBYTE EndOfUserData,
-        _Inout_ std::wostringstream& Result
+        _In_ std::unique_ptr<OutputWriter>& OutputWriter
     );
 
     DWORD GetPropertyLength(

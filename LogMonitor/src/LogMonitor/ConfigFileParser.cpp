@@ -263,6 +263,7 @@ ReadSourceAttributes(
             // * includeSubdirectories
             //
             else if (_wcsnicmp(key.c_str(), JSON_TAG_FORMAT_MULTILINE, _countof(JSON_TAG_FORMAT_MULTILINE)) == 0 ||
+                     _wcsnicmp(key.c_str(), JSON_TAG_JSON_OUTPUT, _countof(JSON_TAG_JSON_OUTPUT)) == 0 ||
                      _wcsnicmp(key.c_str(), JSON_TAG_START_AT_OLDEST_RECORD, _countof(JSON_TAG_START_AT_OLDEST_RECORD)) == 0 ||
                      _wcsnicmp(key.c_str(), JSON_TAG_INCLUDE_SUBDIRECTORIES, _countof(JSON_TAG_INCLUDE_SUBDIRECTORIES)) == 0)
             {
@@ -572,6 +573,7 @@ void _PrintSettings(_Out_ LoggerSettings& Config)
             std::shared_ptr<SourceEventLog> sourceEventLog = std::reinterpret_pointer_cast<SourceEventLog>(source);
 
             std::wprintf(L"\t\teventFormatMultiLine: %ls\n", sourceEventLog->EventFormatMultiLine ? L"true" : L"false");
+            std::wprintf(L"\t\tJsonOutput: %ls\n", sourceEventLog->JsonOutput ? L"true" : L"false");
             std::wprintf(L"\t\tstartAtOldestRecord: %ls\n", sourceEventLog->StartAtOldestRecord ? L"true" : L"false");
 
             std::wprintf(L"\t\tChannels (%d):\n", (int)sourceEventLog->Channels.size());
@@ -604,6 +606,7 @@ void _PrintSettings(_Out_ LoggerSettings& Config)
             std::shared_ptr<SourceETW> sourceETW = std::reinterpret_pointer_cast<SourceETW>(source);
 
             std::wprintf(L"\t\teventFormatMultiLine: %ls\n", sourceETW->EventFormatMultiLine ? L"true" : L"false");
+            std::wprintf(L"\t\tJsonOutput: %ls\n", sourceETW->JsonOutput ? L"true" : L"false");
 
             std::wprintf(L"\t\tProviders (%d):\n", (int)sourceETW->Providers.size());
             for (auto provider : sourceETW->Providers)

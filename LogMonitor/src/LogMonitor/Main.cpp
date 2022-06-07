@@ -85,7 +85,9 @@ bool StartMonitors(_In_ const PWCHAR ConfigFileName)
         std::vector<ETWProvider> etwProviders;
         bool eventMonMultiLine;
         bool eventMonStartAtOldestRecord;
+        bool eventMonJsonOutput;
         bool etwMonMultiLine;
+        bool etwMonJsonOutput;
 
         LoggerSettings settings;
 
@@ -133,6 +135,7 @@ bool StartMonitors(_In_ const PWCHAR ConfigFileName)
 
                     eventMonMultiLine = sourceEventLog->EventFormatMultiLine;
                     eventMonStartAtOldestRecord = sourceEventLog->StartAtOldestRecord;
+                    eventMonJsonOutput = sourceEventLog->JsonOutput;
 
                     break;
                 }
@@ -170,7 +173,7 @@ bool StartMonitors(_In_ const PWCHAR ConfigFileName)
                     }
 
                     etwMonMultiLine = sourceETW->EventFormatMultiLine;
-
+                    etwMonJsonOutput = sourceETW->JsonOutput;
                     break;
                 }
                 } // Switch
@@ -185,7 +188,7 @@ bool StartMonitors(_In_ const PWCHAR ConfigFileName)
         {
             try
             {
-                g_eventMon = make_unique<EventMonitor>(eventChannels, eventMonMultiLine, eventMonStartAtOldestRecord);
+                g_eventMon = make_unique<EventMonitor>(eventChannels, eventMonMultiLine, eventMonStartAtOldestRecord, eventMonJsonOutput);
             }
             catch (std::exception& ex)
             {
@@ -205,7 +208,7 @@ bool StartMonitors(_In_ const PWCHAR ConfigFileName)
         {
             try
             {
-                g_etwMon = make_unique<EtwMonitor>(etwProviders, etwMonMultiLine);
+                g_etwMon = make_unique<EtwMonitor>(etwProviders, etwMonMultiLine, etwMonJsonOutput);
             }
             catch (...)
             {

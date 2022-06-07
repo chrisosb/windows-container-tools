@@ -14,7 +14,8 @@ public:
     EventMonitor(
         _In_ const std::vector<EventLogChannel>& eventChannels,
         _In_ bool EventFormatMultiLine,
-        _In_ bool StartAtOldestRecord
+        _In_ bool StartAtOldestRecord,
+        _In_ bool JsonOutput
         );
 
     ~EventMonitor();
@@ -27,6 +28,7 @@ private:
     const std::vector<EventLogChannel> m_eventChannels;
     bool m_eventFormatMultiLine;
     bool m_startAtOldestRecord;
+    bool m_jsonOutput;
 
     //
     // Signaled by destructor to request the spawned thread to stop.

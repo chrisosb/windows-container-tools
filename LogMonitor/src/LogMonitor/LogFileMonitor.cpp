@@ -4,6 +4,7 @@
 //
 
 #include "pch.h"
+#include "XmlOutputWriter.h"
 
 using namespace std;
 

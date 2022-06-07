@@ -27,11 +27,13 @@ using namespace std;
 EventMonitor::EventMonitor(
     _In_ const std::vector<EventLogChannel>& EventChannels,
     _In_ bool EventFormatMultiLine,
-    _In_ bool StartAtOldestRecord
+    _In_ bool StartAtOldestRecord,
+    _In_ bool JsonOutput
     ) :
     m_eventChannels(EventChannels),
     m_eventFormatMultiLine(EventFormatMultiLine),
-    m_startAtOldestRecord(StartAtOldestRecord)
+    m_startAtOldestRecord(StartAtOldestRecord),
+    m_jsonOutput(JsonOutput)
 {
     m_stopEvent = NULL;
     m_eventMonitorThread = NULL;
@@ -511,13 +513,22 @@ EventMonitor::PrintEvent(
 
             if (status == ERROR_SUCCESS)
             {
-                std::wstring formattedEvent = Utility::FormatString(
-                                                        L"<Source>EventLog</Source><Time>%s</Time><LogEntry><Channel>%s</Channel><Level>%s</Level><EventId>%u</EventId><Message>%s</Message></LogEntry>",
-                                                        Utility::FileTimeToString(fileTimeCreated).c_str(),
-                                                        channelName.c_str(),
-                                                        c_LevelToString[static_cast<UINT8>(level)].c_str(),
-                                                        eventId,
-                                                        (LPWSTR)(&m_eventMessageBuffer[0]));
+                std::unique_ptr<OutputWriter> outputWriter = OutputWriterFactory::CreateOutputWriter(m_jsonOutput);
+                outputWriter->Begin();
+
+                outputWriter->WriteProperty(L"Source", L"EventLog");
+                outputWriter->WriteProperty(L"Time", Utility::FileTimeToString(fileTimeCreated).c_str());
+
+                outputWriter->BeginObject(L"LogEntry");
+                outputWriter->WriteProperty(L"Channel", channelName.c_str());
+                outputWriter->WriteProperty(L"Level", c_LevelToString[static_cast<UINT8>(level)].c_str());
+                outputWriter->WriteProperty(L"EventId", to_wstring(eventId));
+                outputWriter->WriteProperty(L"Message", (LPWSTR)(&m_eventMessageBuffer[0]));
+                outputWriter->EndObject();
+
+                outputWriter->End();
+
+                std::wstring formattedEvent = outputWriter->ToString();
 
                 //
                 // If the multi-line option is disabled, remove all new lines from the output.

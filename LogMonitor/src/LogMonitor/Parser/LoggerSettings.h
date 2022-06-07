@@ -15,6 +15,7 @@
 ///
 #define JSON_TAG_TYPE L"type"
 #define JSON_TAG_FORMAT_MULTILINE L"eventFormatMultiLine"
+#define JSON_TAG_JSON_OUTPUT L"jsonOutput"
 #define JSON_TAG_START_AT_OLDEST_RECORD L"startAtOldestRecord"
 #define JSON_TAG_CHANNELS L"channels"
 #define JSON_TAG_DIRECTORY L"directory"
@@ -201,6 +202,7 @@ class SourceEventLog : LogSource
 public:
     std::vector<EventLogChannel> Channels;
     bool EventFormatMultiLine = true;
+    bool JsonOutput = false;
     bool StartAtOldestRecord = false;
 
     static bool Unwrap(
@@ -230,6 +232,15 @@ public:
             && Attributes[JSON_TAG_FORMAT_MULTILINE] != nullptr)
         {
             NewSource.EventFormatMultiLine = *(bool*)Attributes[JSON_TAG_FORMAT_MULTILINE];
+        }
+
+        //
+        // JsonOutput is an optional value
+        //
+        if (Attributes.find(JSON_TAG_JSON_OUTPUT) != Attributes.end()
+            && Attributes[JSON_TAG_JSON_OUTPUT] != nullptr)
+        {
+            NewSource.JsonOutput = *(bool*)Attributes[JSON_TAG_JSON_OUTPUT];
         }
 
         //
@@ -359,6 +370,7 @@ class SourceETW : LogSource
 public:
     std::vector<ETWProvider> Providers;
     bool EventFormatMultiLine = true;
+    bool JsonOutput = false;
 
     static bool Unwrap(
         _In_ AttributesMap& Attributes,
@@ -389,6 +401,14 @@ public:
             NewSource.EventFormatMultiLine = *(bool*)Attributes[JSON_TAG_FORMAT_MULTILINE];
         }
 
+        //
+        // JsonOutput is an optional value
+        //
+        if (Attributes.find(JSON_TAG_JSON_OUTPUT) != Attributes.end()
+            && Attributes[JSON_TAG_JSON_OUTPUT] != nullptr)
+        {
+            NewSource.JsonOutput = *(bool*)Attributes[JSON_TAG_JSON_OUTPUT];
+        }
 
         return true;
     }

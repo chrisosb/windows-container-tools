@@ -494,6 +494,7 @@ namespace LogMonitorTests
                             {\
                                 \"type\": \"ETW\",\
                                 \"eventFormatMultiLine\" : %s,\
+                                \"jsonOutput\" : %s,\
                                 \"providers\" : [\
                                     {\
                                         \"providerName\": \"%s\",\
@@ -517,6 +518,7 @@ namespace LogMonitorTests
             // First, try this values.
             //
             bool eventFormatMultiLine = true;
+            bool eventJsonOutput = true;
 
             std::wstring firstProviderName = L"IIS: WWW Server";
             std::wstring firstProviderGuid = L"3A2A4E84-4C21-4981-AE10-3FDA0D9B0F83";
@@ -532,6 +534,7 @@ namespace LogMonitorTests
                 std::wstring configFileStr = Utility::FormatString(
                     configFileStrFormat.c_str(),
                     eventFormatMultiLine ? L"true" : L"false",
+                    eventJsonOutput ? L"true" : L"false",
                     firstProviderName.c_str(),
                     firstProviderGuid.c_str(),
                     c_LevelToString[(int)firstProviderLevel].c_str(),
@@ -564,6 +567,7 @@ namespace LogMonitorTests
                 std::shared_ptr<SourceETW> sourceEtw = std::reinterpret_pointer_cast<SourceETW>(settings.Sources[0]);
 
                 Assert::AreEqual(eventFormatMultiLine, sourceEtw->EventFormatMultiLine);
+                Assert::AreEqual(eventJsonOutput, sourceEtw->JsonOutput);
 
                 Assert::AreEqual((size_t)2, sourceEtw->Providers.size());
 
@@ -619,6 +623,7 @@ namespace LogMonitorTests
                 std::wstring configFileStr = Utility::FormatString(
                     configFileStrFormat.c_str(),
                     eventFormatMultiLine ? L"true" : L"false",
+                    eventJsonOutput ? L"true" : L"false",
                     firstProviderName.c_str(),
                     firstProviderGuid.c_str(),
                     c_LevelToString[(int)firstProviderLevel].c_str(),

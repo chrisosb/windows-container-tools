@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="OutputWriter">
+      <UniqueIdentifier>{154d4f55-5a23-4561-abe1-73b363e1ee9b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -51,6 +54,18 @@
     <ClInclude Include="Parser\JsonFileParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="JsonOutputWriter.h">
+      <Filter>OutputWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="XmlOutputWriter.h">
+      <Filter>OutputWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputWriter.h">
+      <Filter>OutputWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputWriterFactory.h">
+      <Filter>OutputWriter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -79,6 +94,18 @@
     </ClCompile>
     <ClCompile Include="JsonFileParser.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonOutputWriter.cpp">
+      <Filter>OutputWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlOutputWriter.cpp">
+      <Filter>OutputWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputWriterFactory.cpp">
+      <Filter>OutputWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputWriter.cpp">
+      <Filter>OutputWriter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -23,32 +23,32 @@
     <ProjectGuid>{87A330AC-84A1-40B3-A596-1BAED16B828F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LogMonitor</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -155,8 +155,11 @@
   <ItemGroup>
     <ClInclude Include="EtwMonitor.h" />
     <ClInclude Include="EventMonitor.h" />
+    <ClInclude Include="OutputWriter.h" />
+    <ClInclude Include="JsonOutputWriter.h" />
     <ClInclude Include="LogFileMonitor.h" />
     <ClInclude Include="LogWriter.h" />
+    <ClInclude Include="OutputWriterFactory.h" />
     <ClInclude Include="Parser\ConfigFileParser.h" />
     <ClInclude Include="Parser\JsonFileParser.h" />
     <ClInclude Include="Parser\LoggerSettings.h" />
@@ -165,14 +168,18 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="version.h" />
+    <ClInclude Include="XmlOutputWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConfigFileParser.cpp" />
     <ClCompile Include="EtwMonitor.cpp" />
     <ClCompile Include="EventMonitor.cpp" />
     <ClCompile Include="JsonFileParser.cpp" />
+    <ClCompile Include="JsonOutputWriter.cpp" />
     <ClCompile Include="LogFileMonitor.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="OutputWriter.cpp" />
+    <ClCompile Include="OutputWriterFactory.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -181,6 +188,7 @@
     </ClCompile>
     <ClCompile Include="ProcessMonitor.cpp" />
     <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="XmlOutputWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LogMonitor.rc" />

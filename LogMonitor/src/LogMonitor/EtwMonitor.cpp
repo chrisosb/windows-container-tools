@@ -30,9 +30,11 @@ static const std::wstring g_sessionName = L"Log Monitor ETW Session";
 
 EtwMonitor::EtwMonitor(
     _In_ const std::vector<ETWProvider>& Providers,
-    _In_ bool EventFormatMultiLine
+    _In_ bool EventFormatMultiLine,
+    _In_ bool JsonOutput
     ) :
-    m_eventFormatMultiLine(EventFormatMultiLine)
+    m_eventFormatMultiLine(EventFormatMultiLine),
+    m_jsonOutput(JsonOutput)
 {
     //
     // This is set as 'true' to stop processing events.
@@ -58,7 +60,7 @@ EtwMonitor::EtwMonitor(
 EtwMonitor::~EtwMonitor()
 {
     ULONG status;
-
+    
     const std::wstring mySessionName = g_sessionName;
     PEVENT_TRACE_PROPERTIES petp = (PEVENT_TRACE_PROPERTIES)&this->m_vecStopTracePropsBuffer[0];
 
@@ -669,8 +671,12 @@ EtwMonitor::PrintEvent(
 
     try
     {
-        std::wstring metadataStr;
-        status = FormatMetadata(EventRecord, EventInfo, metadataStr);
+        std::unique_ptr<OutputWriter> outputWriter = OutputWriterFactory::CreateOutputWriter(m_jsonOutput);
+
+        outputWriter->Begin();
+        outputWriter->WriteProperty(L"Source", L"EtwEvent");
+
+        status = FormatMetadata(EventRecord, EventInfo, outputWriter);
 
         if (status != ERROR_SUCCESS)
         {
@@ -680,8 +686,7 @@ EtwMonitor::PrintEvent(
             return status;
         }
 
-        std::wstring dataStr;
-        status = FormatData(EventRecord, EventInfo, dataStr);
+        status = FormatData(EventRecord, EventInfo, outputWriter);
 
         if (status != ERROR_SUCCESS)
         {
@@ -690,11 +695,10 @@ EtwMonitor::PrintEvent(
             );
             return status;
         }
+       
+        outputWriter->End();
 
-        std::wstring formattedEvent = Utility::FormatString(
-            L"<Source>EtwEvent</Source>%ls%ls",
-            metadataStr.c_str(),
-            dataStr.c_str());
+        std::wstring formattedEvent = outputWriter->ToString();
 
         //
         // If the multi-line option is disabled, remove all new lines from the output.
@@ -712,7 +716,7 @@ EtwMonitor::PrintEvent(
                 });
         }
 
-        logWriter.WriteConsoleLog(formattedEvent);
+        logWriter.WriteConsoleLog(formattedEvent);        
     }
     catch(std::bad_alloc&)
     {
@@ -733,10 +737,9 @@ DWORD
 EtwMonitor::FormatMetadata(
     _In_ const PEVENT_RECORD EventRecord,
     _In_ const PTRACE_EVENT_INFO EventInfo,
-    _Inout_ std::wstring& Result
+    _In_ std::unique_ptr<OutputWriter>& outputWriter
     )
 {
-    std::wostringstream oss;
     FILETIME fileTime;
 
     //
@@ -744,8 +747,8 @@ EtwMonitor::FormatMetadata(
     //
     fileTime.dwHighDateTime = EventRecord->EventHeader.TimeStamp.HighPart;
     fileTime.dwLowDateTime = EventRecord->EventHeader.TimeStamp.LowPart;
-
-    oss << L"<Time>" << Utility::FileTimeToString(fileTime).c_str() << L"</Time>";
+    
+    outputWriter->WriteProperty(L"Time", Utility::FileTimeToString(fileTime).c_str());
 
     //
     // Format provider Id
@@ -760,8 +763,11 @@ EtwMonitor::FormatMetadata(
         );
         return hr;
     }   
+    
+    outputWriter->BeginObject(L"Provider");
+    outputWriter->WriteAttributeOrProperty(L"idGuid", pwsProviderId);
+    outputWriter->EndObject();
 
-    oss << L"<Provider idGuid=\"" << pwsProviderId << "\"/>";
     CoTaskMemFree(pwsProviderId);
     pwsProviderId = NULL;
 
@@ -777,13 +783,12 @@ EtwMonitor::FormatMetadata(
         L"DecodingSourceMax",
     };
 
-    oss << L"<DecodingSource>"
-        << c_DecodingSourceToString[static_cast<UINT8>(EventInfo->DecodingSource)].c_str()
-        << L"</DecodingSource>";
+    outputWriter->WriteProperty(L"DecodingSource", c_DecodingSourceToString[static_cast<UINT8>(EventInfo->DecodingSource)].c_str());
 
-    oss << L"<Execution ProcessID=\""
-        << EventRecord->EventHeader.ProcessId << "\" ThreadID=\""
-        << EventRecord->EventHeader.ThreadId << "\" />";
+    outputWriter->BeginObject(L"Execution");
+    outputWriter->WriteAttributeOrProperty(L"ProcessID", to_wstring(EventRecord->EventHeader.ProcessId));
+    outputWriter->WriteAttributeOrProperty(L"ThreadId", to_wstring(EventRecord->EventHeader.ThreadId));
+    outputWriter->EndObject();
 
     //
     // Print Level and Keyword
@@ -798,14 +803,8 @@ EtwMonitor::FormatMetadata(
         L"Verbose",
     };
 
-    oss << L"<Level>" 
-        << c_LevelToString[EventRecord->EventHeader.EventDescriptor.Level] 
-        << L"</Level>";
-
-    oss << L"<Keyword>" 
-        << Utility::FormatString(L"0x%llx", EventRecord->EventHeader.EventDescriptor.Keyword)
-        << L"</Keyword>";
-
+    outputWriter->WriteProperty(L"Level", c_LevelToString[EventRecord->EventHeader.EventDescriptor.Level]);
+    outputWriter->WriteProperty(L"Keyword", Utility::FormatString(L"0x%llx", EventRecord->EventHeader.EventDescriptor.Keyword));
 
     //
     // Format specific metadata by type
@@ -823,23 +822,23 @@ EtwMonitor::FormatMetadata(
             return hr;
         }
 
-        oss << L"<EventID idGuid=\"" << pwsEventGuid << "\" />";;
+        outputWriter->BeginObject(L"EventID");
+        outputWriter->WriteAttributeOrProperty(L"idGuid", pwsEventGuid);
+        outputWriter->EndObject();
+
         CoTaskMemFree(pwsEventGuid);
         pwsEventGuid = NULL;
 
-        oss << L"<Version>" << EventRecord->EventHeader.EventDescriptor.Version << L"</Version>";
-        oss << L"<Opcode>" << EventRecord->EventHeader.EventDescriptor.Opcode << L"</Opcode>";
+        outputWriter->WriteProperty(L"Version", to_wstring(EventRecord->EventHeader.EventDescriptor.Version));
+        outputWriter->WriteProperty(L"Opcode", to_wstring(EventRecord->EventHeader.EventDescriptor.Opcode));
     }
     else if (DecodingSourceXMLFile == EventInfo->DecodingSource) // Instrumentation manifest
     {
-        oss << L"<EventID Qualifiers=\"" << (int)EventInfo->EventDescriptor.Id << "\">"
-            << (int)EventInfo->EventDescriptor.Id << "</EventID>";
+        outputWriter->BeginObject(L"EventID");
+        outputWriter->WriteAttributeOrProperty(L"Qualifiers", to_wstring((int)EventInfo->EventDescriptor.Id));
+        outputWriter->WriteText(to_wstring((int)EventInfo->EventDescriptor.Id));
+        outputWriter->EndObject();
     }
-
-    //
-    // Convert the stream to a wstring
-    //
-    Result = oss.str();
 
     return ERROR_SUCCESS;
 }
@@ -858,11 +857,10 @@ DWORD
 EtwMonitor::FormatData(
     _In_ const PEVENT_RECORD EventRecord,
     _In_ const PTRACE_EVENT_INFO EventInfo,
-    _Inout_ std::wstring& Result
+    _In_ std::unique_ptr<OutputWriter>& outputWriter
     )
 {
     DWORD status = ERROR_SUCCESS;
-    std::wostringstream oss;
 
     if (EVENT_HEADER_FLAG_32_BIT_HEADER == (EventRecord->EventHeader.Flags & EVENT_HEADER_FLAG_32_BIT_HEADER))
     {
@@ -879,19 +877,19 @@ EtwMonitor::FormatData(
     // property information array. If the EVENT_HEADER_FLAG_STRING_ONLY flag is set,
     // the event data is a null-terminated string, so just print it.
     //
-    oss << L"<EventData>";
     if (EVENT_HEADER_FLAG_STRING_ONLY == (EventRecord->EventHeader.Flags & EVENT_HEADER_FLAG_STRING_ONLY))
     {
-        oss << (LPWSTR)EventRecord->UserData;
+        outputWriter->WriteProperty(L"EventData", (LPWSTR)EventRecord->UserData);
     }
     else
     {
+        outputWriter->BeginObject(L"EventData");
         PBYTE pUserData = (PBYTE)EventRecord->UserData;
         PBYTE pEndOfUserData = (PBYTE)EventRecord->UserData + EventRecord->UserDataLength;
 
         for (USHORT i = 0; i < EventInfo->TopLevelPropertyCount; i++)
         {
-            status = _FormatData(EventRecord, EventInfo, i, pUserData, pEndOfUserData, oss);
+            status = _FormatData(EventRecord, EventInfo, i, pUserData, pEndOfUserData, outputWriter);
             if (ERROR_SUCCESS != status)
             {
                 logWriter.TraceError(L"Failed to format ETW event user data..");
@@ -899,10 +897,8 @@ EtwMonitor::FormatData(
                 return status;
             }
         }
+        outputWriter->EndObject();
     }
-    oss << L"</EventData>";
-
-    Result = oss.str();
 
     return ERROR_SUCCESS;
 }
@@ -928,7 +924,7 @@ EtwMonitor::_FormatData(
     _In_ USHORT Index,
     _Inout_ PBYTE& UserData,
     _In_ PBYTE EndOfUserData,
-    _Inout_ std::wostringstream& Result
+    _In_ std::unique_ptr<OutputWriter>& outputWriter
     )
 {
     DWORD status = ERROR_SUCCESS;
@@ -957,25 +953,29 @@ EtwMonitor::_FormatData(
 
     for (USHORT k = 0; k < arraySize; k++)
     {
-        Result << "<" << (LPWSTR)((PBYTE)(EventInfo) + EventInfo->EventPropertyInfoArray[Index].NameOffset) << ">";
+        LPWSTR name = (LPWSTR)((PBYTE)(EventInfo)+EventInfo->EventPropertyInfoArray[Index].NameOffset);        
 
         //
         // If the property is a structure, print the members of the structure.
         //
         if ((EventInfo->EventPropertyInfoArray[Index].Flags & PropertyStruct) == PropertyStruct)
         {
+            outputWriter->BeginObject(name);
+
             lastMember = EventInfo->EventPropertyInfoArray[Index].structType.StructStartIndex +
                 EventInfo->EventPropertyInfoArray[Index].structType.NumOfStructMembers;
 
             for (USHORT j = EventInfo->EventPropertyInfoArray[Index].structType.StructStartIndex; j < lastMember; j++)
             {
-                status = _FormatData(EventRecord, EventInfo, j, UserData, EndOfUserData, Result);
+                status = _FormatData(EventRecord, EventInfo, j, UserData, EndOfUserData, outputWriter);
                 if (ERROR_SUCCESS != status || UserData == NULL)
                 {
                     logWriter.TraceError(L"Failed to format ETW event user data.");
                     break;
                 }
             }
+
+            outputWriter->EndObject();
         }
         else if(propertyLength > 0 || (EndOfUserData - UserData) > 0)
         {
@@ -1051,8 +1051,7 @@ EtwMonitor::_FormatData(
 
             if (ERROR_SUCCESS == status)
             {
-                Result << (PWCHAR)formattedData.data();
-
+                outputWriter->WriteProperty(name, (PWCHAR)formattedData.data());                
                 UserData += userDataConsumed;
             }
             else
@@ -1062,8 +1061,6 @@ EtwMonitor::_FormatData(
                 break;
             }
         }
-
-        Result << "</" << (LPWSTR)((PBYTE)(EventInfo) + EventInfo->EventPropertyInfoArray[Index].NameOffset) << ">";
     }
 
     return status;

@@ -4,7 +4,10 @@
 //
 
 #include "pch.h"
-
+#include "..\src\LogMonitor\OutputWriter.cpp"
+#include "..\src\LogMonitor\XmlOutputWriter.cpp"
+#include "..\src\LogMonitor\JsonOutputWriter.cpp"
+#include "..\src\LogMonitor\OutputWriterFactory.cpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -74,7 +77,7 @@ namespace LogMonitorTests
                 ZeroMemory(bigOutBuf, sizeof(bigOutBuf));
                 fflush(stdout);
 
-                EtwMonitor etwMonitor(etwProviders, true);
+                EtwMonitor etwMonitor(etwProviders, true, false);
                 Sleep(WAIT_TIME_ETWMONITOR_START);
 
                 
@@ -152,7 +155,7 @@ namespace LogMonitorTests
             ZeroMemory(bigOutBuf, sizeof(bigOutBuf));
             fflush(stdout);
 
-            EtwMonitor etwMonitor(etwProviders, true);
+            EtwMonitor etwMonitor(etwProviders, true, false);
 
             //
             // It must find the provider, and start printing events.
@@ -187,7 +190,7 @@ namespace LogMonitorTests
             fflush(stdout);
 
 
-            std::function<void(void)> f1 = [&etwProviders] { EtwMonitor etwMonitor(etwProviders, true); };
+            std::function<void(void)> f1 = [&etwProviders] { EtwMonitor etwMonitor(etwProviders, true, false); };
             Assert::ExpectException<std::invalid_argument>(f1);
         }
     };
