@@ -34,5 +34,6 @@ public:
 	void PushName(std::wstring);
 	std::wstring PopName();
 	std::wstring ToString();
+	std::wstring ReplaceAll(std::wstring Str, const std::wstring& From, const std::wstring& To);
 };
 

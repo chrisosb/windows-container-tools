@@ -35,36 +35,6 @@ XmlOutputWriter::EndObject()
 	}
 }
 
-//void
-//XmlOutputWriter::EndObject(
-//	_In_ std::wstring Name,
-//	_In_ std::wstring Value
-//)
-//{
-//	if (m_WritePropertiesAsAttributes)
-//	{
-//		if (Value != L"")
-//		{
-//			m_oss << ">" << Value << "</" << Name << ">";
-//		}
-//		else
-//		{
-//			m_oss << "/>";
-//		}
-//
-//		m_WritePropertiesAsAttributes = false;
-//	}
-//	else
-//	{
-//		if (Value != L"")
-//		{
-//			m_oss << Value;
-//		}
-//
-//		m_oss << "</" << Name << ">";
-//	}	
-//}
-
 void
 XmlOutputWriter::WriteProperty(
 	_In_ std::wstring Name,
@@ -78,7 +48,11 @@ XmlOutputWriter::WriteProperty(
 		m_writePropertiesAsAttributes = false;
 	}
 
-	m_oss << "<" << Name << ">" << Value << "</" << Name << ">";		
+	std::wstring safeValue = ReplaceAll(Value, L"&", L"&amp;").c_str();
+	safeValue = ReplaceAll(safeValue, L"<", L"&lt;").c_str();
+	safeValue = ReplaceAll(safeValue, L">", L"&gt;").c_str();
+
+	m_oss << "<" << Name << ">" << safeValue << "</" << Name << ">";
 }
 
 void
@@ -109,5 +83,9 @@ XmlOutputWriter::WriteText(
 		m_writePropertiesAsAttributes = false;
 	}
 
-	m_oss << Value;
+	std::wstring safeValue = ReplaceAll(Value, L"&", L"&amp;").c_str();
+	safeValue = ReplaceAll(safeValue, L"<", L"&lt;").c_str();
+	safeValue = ReplaceAll(safeValue, L">", L"&gt;").c_str();
+
+	m_oss << safeValue;
 }

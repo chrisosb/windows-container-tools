@@ -50,7 +50,10 @@ JsonOutputWriter::WriteProperty(
 		m_oss << ",";
 	}
 
-	m_oss << "\"" << Name << "\":\"" << Value << "\"";
+	std::wstring safeValue = ReplaceAll(Value, L"\\", L"\\\\").c_str();
+	safeValue = ReplaceAll(safeValue, L"\"", L"\\\"").c_str();
+
+	m_oss << "\"" << Name << "\":\"" << safeValue << "\"";
 	m_requiresComma = true;
 }
 
